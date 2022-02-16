@@ -40,7 +40,7 @@ class Motif:
     #make the name of the motif object the motif as it is in the motif file
     def __init__(self, mot_string):
         self.motif = mot_string.upper()
-        #print (self.motif)
+        self.mot_length = len(self.motif)
 
     ## Methods ##
     def make_motif_poss(self):
@@ -62,10 +62,33 @@ class Gene:
     def __init__(self, header, seq):
         self.header = header
         self.seq = seq
+        self.motif_locs = list()
+        self.intron_pos = list()
+        self.exon_pos = list() #start and ending position of the exon 
 
     ## Methods ##
     #def make_poss_list(self):
 
+    def find_exon(self):
+        for i,nuc in enumerate(self.seq):
+            if nuc.isupper():
+                self.exon_pos.append(i)
+            else: #lower case
+                continue
+        self.exon_pos = [self.exon_pos[0], self.exon_pos[-1]]
+        print(self.exon_pos)
+
+    def find_intron(self):
+        self.intron_pos.append(0)
+        self.intron_pos.append((self.exon_pos[0]-1))
+        self.intron_pos.append((self.exon_pos[1]+1))
+        self.intron_pos.append((len(self.seq)-1))
+        print(self.intron_pos)
+
+# gene class test
+gene1 = Gene('name', 'aaaAAAaaa')
+gene1.find_exon()
+gene1.find_intron()
 
 
 class Pycairo:
