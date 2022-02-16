@@ -40,38 +40,20 @@ class Motif:
     #make the name of the motif object the motif as it is in the motif file
     def __init__(self, mot_string):
         self.motif = mot_string.upper()
-        self.indv_list = list()
-        self.inter_list = list()
-        self.poss_list = list()
+        #print (self.motif)
 
     ## Methods ##
-    def make_poss_list(self):
-        nuc_list = list()
-        for i in self.motif:
-            nuc_list = list()
-            if i == 'A' or i == 'C' or i == 'G' or i == 'T':
-                nuc_list.append(i)
-                #print('nuc')
-            elif i == 'Y':
-                nuc_list.append('C')
-                nuc_list.append('T')
-            elif i == 'R':
-                nuc_list.append('A')
-                nuc_list.append('G')
-            self.indv_list.append(nuc_list)
-
-        # need * to unpack the list
-        self.inter_list = list(itertools.product(*self.indv_list))
-        for i in self.inter_list:
-            mot_str= ''
-            for element in i:
-                mot_str += str(element)
-            self.poss_list.append(mot_str)
-        #print(len(self.poss_list))
+    def make_motif_poss(self):
+        mot = self.motif
+        #print(mot)
+        mot = mot.replace('Y', '[CTU]')
+        mot = mot.replace('R', '[AG]')
+        self.motif = mot
+        #print(self.motif)
 
 # motif class test
-mot1 = Motif('YYYYYYYYYY')
-mot1.make_poss_list()
+mot1 = Motif('YAAR')
+mot1.make_motif_poss()
 
 
 
@@ -141,4 +123,4 @@ with open(args.fasta_file, 'r') as fh2:
         else:
             seq_str += line.strip('/n')
 
-print(seq_dict)
+#print(seq_dict)
