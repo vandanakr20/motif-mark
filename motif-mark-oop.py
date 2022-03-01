@@ -2,32 +2,14 @@
 
 import argparse
 import cairo
-import itertools
-
-'''
-1. Fasta Class
-    a. parse_seq - for each motif instance, loop through the sequence and find all the starting locations of all the possibilities
-
-2. Drawing Class
-    a. draw_surface - take the number of seqeuences (n) in and create a surface n times the size of one box (300 x 100?) 
-
-    b. draw_hor_lines - draw the horizontal like accross each box
-
-    c. draw_exons - draw the exon boxes
-
-    d. draw motif lines - using the list of locations, draw the motif lines of the correct width on the box. take care of the overlapping problem here
-
-    e. make_key - make a key and add a title to the box
-'''
+import re
 
 # case does not matter in motif file 
 # lower case - intron 
 # upper case - exon
 
 
-#argparse
-
-# use argparse to get user input of the file names, if the data is paired, and $
+# use argparse to get user input of the fasta and motif file names
 def get_args():
     parse = argparse.ArgumentParser(description="A program to visualize motifs within a sequence")
     parse.add_argument("-f", "--fasta_file", required = True, help="fasta file with sequences")
@@ -36,24 +18,30 @@ def get_args():
 
 args = get_args()
 
+# motif class - each motif will be an instance of this class
 class Motif:
     #make the name of the motif object the motif as it is in the motif file
     def __init__(self, mot_string):
-        self.motif = mot_string.upper()
-        self.mot_length = len(self.motif)
+        self.true_motif_name = mot_string
+        self.motif_name = mot_string.upper()
+        self.mot_length = len(self.motif_name)
 
     ## Methods ##
     def make_motif_poss(self):
-        mot = self.motif
-        #print(mot)
+        mot = self.motif_name
         mot = mot.replace('Y', '[CTU]')
         mot = mot.replace('R', '[AG]')
-        self.motif = mot
-        #print(self.motif)
+        mot = mot.replace('W', '[AT]')
+        mot = mot.replace('S', '[CG]')
+        mot = mot.replace('M', '[AC]')
+        mot = mot.replace('K', '[GT]')
+        mot = mot.replace('B', '[CGT]')
+        mot = mot.replace('D', '[AGT]')
+        mot = mot.replace('H', '[ACT]')
+        mot = mot.replace('V', '[ACG]')
+        mot = mot.replace('N', '[ACGT]')
+        self.motif_name = mot
 
-# motif class test
-mot1 = Motif('YAAR')
-mot1.make_motif_poss()
 
 
 
@@ -62,12 +50,22 @@ class Gene:
     def __init__(self, header, seq):
         self.header = header
         self.seq = seq
-        self.motif_locs = list()
-        self.intron_pos = list()
+        self.motif_locs = {}
+        #self.intron_pos = list()
         self.exon_pos = list() #start and ending position of the exon 
+        self.conversion = 0
+        self.motif_length = 0
 
     ## Methods ##
-    #def make_poss_list(self):
+    def find_motif_locs(self, motif):
+        match_list = list()
+        p = re.finditer(motif.motif_name, self.seq.upper())
+        for match in p:
+            match = match.span()
+            match_list.append(match)
+        self.motif_locs[motif.true_motif_name] = match_list
+        self.motif_length = (motif.mot_length)
+        #print(self.motif_locs)
 
     def find_exon(self):
         for i,nuc in enumerate(self.seq):
@@ -76,63 +74,132 @@ class Gene:
             else: #lower case
                 continue
         self.exon_pos = [self.exon_pos[0], self.exon_pos[-1]]
-        print(self.exon_pos)
+        #print(self.exon_pos)
 
-    def find_intron(self):
-        self.intron_pos.append(0)
-        self.intron_pos.append((self.exon_pos[0]-1))
-        self.intron_pos.append((self.exon_pos[1]+1))
-        self.intron_pos.append((len(self.seq)-1))
-        print(self.intron_pos)
+    # def find_intron(self):
+    #     self.intron_pos.append(0)
+    #     self.intron_pos.append((self.exon_pos[0]-1))
+    #     self.intron_pos.append((self.exon_pos[1]+1))
+    #     self.intron_pos.append((len(self.seq)-1))
+    #     #print(self.intron_pos)
+    
+    def calc_conversion(self):
+        long_seq = len(self.seq)
+        #print(300/long_seq)
+        self.conversion = 1000/long_seq
 
 # gene class test
-gene1 = Gene('name', 'aaaAAAaaa')
-gene1.find_exon()
-gene1.find_intron()
+# gene1 = Gene('name', 'cccAAAccAAAc')
+# gene1.find_exon()
+# gene1.find_intron()
+# gene1.find_motif_locs(mot1)
 
 
-class Pycairo:
-  def __init__(self, num_fasta, num_motif): #this is how you actually make the attributes of the class
+class Pycairo_draw:
+    def __init__(self, motif_dict, seq_dict, color_list): #this is how you actually make the attributes of the class
     ## Data ##
-    self.num_fasta = num_fasta
-    self.num_motif = num_motif
+        self.motif_dict = motif_dict
+        self.seq_dict = seq_dict
+        self.color_list = color_list
 
     ## Methods ##
-    def create_surface(self, num_fasta):
-        num = num_fasta * 300
-        surface = cairo.ImageSurface(cairo.FORMAT_RGB24, num, 200)
+    def create_figure(self):   
+    #draw the cairo shit
+        num_seq = len(self.seq_dict)
+        size = num_seq * 100
+        surface = cairo.ImageSurface(cairo.FORMAT_RGB24, 1000, size)
         context = cairo.Context(surface)
 
-    def create_background(self, surface, context):
         #color the background
-        context.rectangle(0, 0, 300, 200) 
-        context.set_source_rgb(.76, 1.00, .76)
+        context.rectangle(0, 0, 1000, size) 
+        context.set_source_rgb(0, 0, 0)
         context.fill()
+ 
+        y_add = 50
+        for motif, seq in self.seq_dict.items():
+            #draw line
+            context.move_to(70 ,y_add)
+            context.line_to(len(seq.seq), y_add)
+            context.set_source_rgb(0.5, 0.5, 0.5) 
+            context.set_line_width(2)
+            context.stroke()
+            y_add += 100
 
-        #draw line
-        context.move_to(0,100)
-        context.line_to(300, 100)
-        context.set_source_rgb(1, 0, 0)
-        context.set_line_width(10)
-        context.stroke()
+        #draw rectangle 
+        start_y = 25
+        for seqkey, seqvalue in self.seq_dict.items():
+            #draw a rectangle       #(x0,y0,length,width)
+            start_x = (seqvalue.exon_pos[0]*seqvalue.conversion)
+            print(start_x)
+            end_x = ((seqvalue.exon_pos[1]-seqvalue.exon_pos[0])*seqvalue.conversion)
+            print(end_x)
+            context.rectangle(start_x, start_y, end_x , 50)
+            context.set_source_rgb(0.5, 0.5, 0.5)
+            context.fill()
+            start_y += 100
 
-        #draw a rectangle       #(x0,y0,x1,y1)
-        context.rectangle(50, 50, 200, 100)
-        context.set_source_rgb(.16, .56, .51)
-        context.fill()
+        y_start = 35
+        y_end = 65
+
+        for seqvalue in self.seq_dict.values():
+            #print(seqvalue.motif_locs)
+            i = 0
+            for motif, locs in seqvalue.motif_locs.items():
+                for one_loc in locs:
+                    start = one_loc[0]*seqvalue.conversion
+                    context.move_to(start , y_start)
+                    context.line_to(start, y_end)
+                    context.set_source_rgba(self.color_list[i][0],self.color_list[i][1],self.color_list[i][2], 0.5)
+                    context.set_line_width(len(motif)-2)
+                    context.stroke()
+                i += 1
+            y_start += 100
+            y_end += 100
+
+        y2 = 20
+        for seqvalue in self.seq_dict.values():
+            context.set_source_rgb(1, 1, 1)
+                
+            context.select_font_face("sans-serif")
+            context.set_font_size(13)
+                
+            context.move_to(300, y2)
+            context.show_text(seqvalue.header[1:])
+            y2 += 100
+
+        #create legend
+            y = 45
+            for key in self.motif_dict.keys():
+                context.set_source_rgb(1, 1, 1) 
+                context.select_font_face("sans-serif")
+                context.set_font_size(12)
+                context.move_to(915, y)
+                context.show_text(key.upper())
+                y += 40
+
+            y = 20
+            for i in range(len(self.motif_dict)):
+                context.rectangle(920, y, 10 , 10)
+                context.set_source_rgb(self.color_list[i][0],self.color_list[i][1],self.color_list[i][2])
+                context.fill()
+                y += 39
 
 
-
-        #create png output
-        surface.write_to_png('prettypicture.png')
+        surface.write_to_png('prettypic.png')
 
 
+#################################################################################################
+# main                                                                                          #
+#################################################################################################
+
+#define motif dict
 motif_dict = {}
 with open(args.motif_file, 'r') as fh:
     for line in fh:
         motif_dict[line.strip()] = Motif(line.strip())
 #print(motif_dict)
 
+#define seq dict
 seq_dict = {}
 seq_str = ''
 name = ''
@@ -140,10 +207,34 @@ with open(args.fasta_file, 'r') as fh2:
     for line in fh2:
         if line.startswith('>'):
             if name != '':
-                seq_dict[name] = Gene(name, seq_str) #shorten the name in the key
+                seq_dict[name.strip('\n')] = Gene(name.strip('\n'), seq_str.strip('\n')) #shorten the name in the key
             seq_str = ''
-            name = line.strip('/n')
+            name = line.strip('\n')
         else:
-            seq_str += line.strip('/n')
-
+            seq_str += line.strip('\n')
+    seq_dict[name.strip('\n')] = Gene(name.strip('\n'), seq_str.strip('\n')) #shorten the name in the key
 #print(seq_dict)
+
+#run motif method
+for motifkey, motifvalue in motif_dict.items():
+    motifvalue.make_motif_poss()
+
+#run seq methods
+for seqkey, seqvalue in seq_dict.items():
+    seqvalue.find_exon()
+    seqvalue.calc_conversion()
+    for motifkey, motifvalue in motif_dict.items():
+        seqvalue.find_motif_locs(motifvalue)
+    #print(seqkey, seqvalue.motif_locs)
+
+
+color_list = list()
+color_list.append((0.4,0.7,1)) #blue
+color_list.append((0.8,0.3,0.9)) #purple
+color_list.append((1,0.2,0)) #red
+color_list.append((1,1,0)) #yellow
+color_list.append((0.9,0.5,0)) # orange
+#print(color_list)
+
+figure1 = Pycairo_draw(motif_dict, seq_dict, color_list)
+figure1.create_figure()
