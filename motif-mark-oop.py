@@ -53,7 +53,6 @@ class Gene:
         self.motif_locs = {}
         #self.intron_pos = list()
         self.exon_pos = list() #start and ending position of the exon 
-        self.conversion = 0
         self.motif_length = 0
 
     ## Methods ##
@@ -82,11 +81,6 @@ class Gene:
     #     self.intron_pos.append((self.exon_pos[1]+1))
     #     self.intron_pos.append((len(self.seq)-1))
     #     #print(self.intron_pos)
-    
-    def calc_conversion(self):
-        long_seq = len(self.seq)
-        #print(300/long_seq)
-        self.conversion = 1000/long_seq
 
 # gene class test
 # gene1 = Gene('name', 'cccAAAccAAAc')
@@ -107,46 +101,49 @@ class Pycairo_draw:
     #draw the cairo shit
         num_seq = len(self.seq_dict)
         size = num_seq * 100
-        surface = cairo.ImageSurface(cairo.FORMAT_RGB24, 1000, size)
+        surface = cairo.ImageSurface(cairo.FORMAT_RGB24, 900, size)
         context = cairo.Context(surface)
 
         #color the background
-        context.rectangle(0, 0, 1000, size) 
+        context.rectangle(0, 0, 900, size) 
         context.set_source_rgb(0, 0, 0)
         context.fill()
  
-        y_add = 50
+        y_add = 60
         for motif, seq in self.seq_dict.items():
             #draw line
             context.move_to(70 ,y_add)
-            context.line_to(len(seq.seq), y_add)
-            context.set_source_rgb(0.5, 0.5, 0.5) 
+            context.line_to((len(seq.seq)+70), y_add)
+            #print(len(seq.seq))
+            context.set_source_rgba(0.5, 0.5, 0.5, 0.5) 
             context.set_line_width(2)
             context.stroke()
             y_add += 100
 
         #draw rectangle 
-        start_y = 25
+        start_y = 35
         for seqkey, seqvalue in self.seq_dict.items():
             #draw a rectangle       #(x0,y0,length,width)
-            start_x = (seqvalue.exon_pos[0]*seqvalue.conversion)
+            print(seqvalue.exon_pos)
+            start_x = (seqvalue.exon_pos[0] + 70)
             print(start_x)
-            end_x = ((seqvalue.exon_pos[1]-seqvalue.exon_pos[0])*seqvalue.conversion)
+            end_x = ((seqvalue.exon_pos[1]-seqvalue.exon_pos[0]))
             print(end_x)
             context.rectangle(start_x, start_y, end_x , 50)
-            context.set_source_rgb(0.5, 0.5, 0.5)
+            context.set_source_rgba(0.5, 0.5, 0.5, .4)
             context.fill()
             start_y += 100
 
-        y_start = 35
-        y_end = 65
+        y_start = 45
+        y_end = 75
 
         for seqvalue in self.seq_dict.values():
             #print(seqvalue.motif_locs)
             i = 0
             for motif, locs in seqvalue.motif_locs.items():
                 for one_loc in locs:
-                    start = one_loc[0]*seqvalue.conversion
+                    print(one_loc)
+                    start = one_loc[0]+70
                     context.move_to(start , y_start)
                     context.line_to(start, y_end)
                     context.set_source_rgba(self.color_list[i][0],self.color_list[i][1],self.color_list[i][2], 0.5)
@@ -156,14 +153,14 @@ class Pycairo_draw:
             y_start += 100
             y_end += 100
 
-        y2 = 20
+        y2 = 26
         for seqvalue in self.seq_dict.values():
             context.set_source_rgb(1, 1, 1)
                 
-            context.select_font_face("sans-serif")
+            #context.select_font_face("sans-serif")
             context.set_font_size(13)
                 
-            context.move_to(300, y2)
+            context.move_to(70, y2)
             context.show_text(seqvalue.header[1:])
             y2 += 100
 
@@ -171,18 +168,18 @@ class Pycairo_draw:
             y = 45
             for key in self.motif_dict.keys():
                 context.set_source_rgb(1, 1, 1) 
-                context.select_font_face("sans-serif")
+                #gitcontext.select_font_face("sans-serif")
                 context.set_font_size(12)
-                context.move_to(915, y)
+                context.move_to(750, y)
                 context.show_text(key.upper())
-                y += 40
+                y += 30
 
-            y = 20
+            y = 35
             for i in range(len(self.motif_dict)):
-                context.rectangle(920, y, 10 , 10)
+                context.rectangle(730, y, 10 , 10)
                 context.set_source_rgb(self.color_list[i][0],self.color_list[i][1],self.color_list[i][2])
                 context.fill()
-                y += 39
+                y += 30
 
 
         surface.write_to_png('prettypic.png')
@@ -222,7 +219,6 @@ for motifkey, motifvalue in motif_dict.items():
 #run seq methods
 for seqkey, seqvalue in seq_dict.items():
     seqvalue.find_exon()
-    seqvalue.calc_conversion()
     for motifkey, motifvalue in motif_dict.items():
         seqvalue.find_motif_locs(motifvalue)
     #print(seqkey, seqvalue.motif_locs)
