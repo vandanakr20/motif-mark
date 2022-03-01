@@ -181,8 +181,10 @@ class Pycairo_draw:
                 context.fill()
                 y += 30
 
-
-        surface.write_to_png('prettypic.png')
+        name = args.fasta_file.partition('.')[0]
+        file_name = name.split('/')[-1]
+        file_name = file_name + '.png'
+        surface.write_to_png(file_name)
 
 
 #################################################################################################
