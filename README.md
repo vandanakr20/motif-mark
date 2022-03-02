@@ -1,6 +1,6 @@
 # Motif-Mark
 
-Motif-Mark is a python program used to visualize motifs on sequences. This program takes in a fasta file and a txt file with motifs, and creates an image with the all motif locations on each sequence depicted as a png. Exons are depicted with rectangles and motifs with lines. 
+Motif-Mark is a python program used to visualize motifs on sequences. This program takes in a fasta file and a txt file with motifs, and creates an image with the all motif locations on each sequence depicted as a png. Exons are depicted with rectangles and motifs with lines. Overlapping motifs will show up darker on the image if there are mutlple motifs. 
 
 Usage: ./motif-mark-oop.py -f [Fasta File] -m [Motif File]
 
