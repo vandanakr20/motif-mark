@@ -8,4 +8,4 @@ Requirements:
 1. The absolute paths to the Fasta and Motif files are needed. 
 2. This program can handle any number of sequences with one exon each and up to 5 motifs. 
 
-Example Output: ![alt text](http://url/to/img.png)
+Example Output: ![alt text](/Figure1.png)
