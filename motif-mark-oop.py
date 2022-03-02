@@ -11,8 +11,8 @@ import re
 # use argparse to get user input of the fasta and motif file names
 def get_args():
     parse = argparse.ArgumentParser(description="A program to visualize motifs within a sequence")
-    parse.add_argument("-f", "--fasta_file", required = True, help="fasta file with sequences")
-    parse.add_argument("-m", "--motif_file", required = True, help="text file with motifs")
+    parse.add_argument("-f", "--fasta_file", required = True, help="absolute path to fasta file with sequences")
+    parse.add_argument("-m", "--motif_file", required = True, help="absolute path to text file with motifs")
     return parse.parse_args()
 
 args = get_args()
@@ -109,7 +109,6 @@ class Pycairo_draw:
         #draw rectangle of size 50 starting at the start of the exon and ending as the end of the exon
         start_y = 35
         for seqvalue in self.seq_dict.values():
-            #draw a rectangle for the exon
             start_x = (seqvalue.exon_pos[0] + 70)
             end_x = ((seqvalue.exon_pos[1]-seqvalue.exon_pos[0]))
             context.rectangle(start_x, start_y, end_x , 50)
