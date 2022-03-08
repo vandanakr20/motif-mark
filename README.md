@@ -8,5 +8,6 @@ Requirements:
 1. The absolute paths to the Fasta and Motif files are needed. 
 2. This program can handle one fasta file with any number of sequences with one exon each and one motif file with up to 5 motifs. 
 
-Example Output: <img width="1045" alt="Motif-Mark" src="https://user-images.githubusercontent.com/83670690/156432151-1a0f2564-aac7-4322-8da9-d784ff8306d1.png">
+Example Output: <img width="1149" alt="Screen Shot 2022-03-07 at 9 12 47 PM" src="https://user-images.githubusercontent.com/83670690/157170619-97d37cf3-ac93-445a-9882-480b46087bb5.png">
+
 
