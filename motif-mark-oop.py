@@ -81,26 +81,34 @@ class Pycairo_draw:
         self.motif_dict = motif_dict
         self.seq_dict = seq_dict
         self.color_list = color_list
+        self.longest_seq = 0
 
     ## Methods ##
+    def find_longest(self):
+        max_len = 0
+        for seqvalue in self.seq_dict.values():
+            run_len = len(seqvalue.seq)
+            if run_len > max_len:
+                max_len = run_len
+        self.longest_seq = max_len + 200
     #draw the figure using Pycairo
     def create_figure(self):   
         #create the surface as 900 x 100*number of sequences
         num_seq = len(self.seq_dict)
         size = num_seq * 100
-        surface = cairo.ImageSurface(cairo.FORMAT_RGB24, 900, size)
+        surface = cairo.ImageSurface(cairo.FORMAT_RGB24, self.longest_seq, size)
         context = cairo.Context(surface)
 
         #color the background black
-        context.rectangle(0, 0, 900, size) 
+        context.rectangle(0, 0, self.longest_seq, size) 
         context.set_source_rgb(0, 0, 0)
         context.fill()
 
         #starting at x postion 60, draw lines for each sequence based on the length of the sequence
         y_add = 60
         for motif, seq in self.seq_dict.items():
-            context.move_to(70 ,y_add)
-            context.line_to((len(seq.seq)+70), y_add)
+            context.move_to(50 ,y_add)
+            context.line_to((len(seq.seq)+50), y_add)
             context.set_source_rgba(0.5, 0.5, 0.5, 0.5) 
             context.set_line_width(2)
             context.stroke()
@@ -109,7 +117,7 @@ class Pycairo_draw:
         #draw rectangle of size 50 starting at the start of the exon and ending as the end of the exon
         start_y = 35
         for seqvalue in self.seq_dict.values():
-            start_x = (seqvalue.exon_pos[0] + 70)
+            start_x = (seqvalue.exon_pos[0] + 50)
             end_x = ((seqvalue.exon_pos[1]-seqvalue.exon_pos[0]))
             context.rectangle(start_x, start_y, end_x , 50)
             context.set_source_rgba(0.5, 0.5, 0.5, .4)
@@ -124,7 +132,7 @@ class Pycairo_draw:
             #make each motif a different color
             for motif, locs in seqvalue.motif_locs.items():
                 for one_loc in locs:
-                    start = one_loc[0]+70
+                    start = one_loc[0]+50
                     context.move_to(start , y_start)
                     context.line_to(start, y_end)
                     # make transparent to see overlapping motifs
@@ -140,7 +148,7 @@ class Pycairo_draw:
         for seqvalue in self.seq_dict.values():
             context.set_source_rgb(1, 1, 1)
             context.set_font_size(13)
-            context.move_to(70, y2)
+            context.move_to(50, y2)
             context.show_text(seqvalue.header[1:])
             y2 += 100
 
@@ -150,14 +158,14 @@ class Pycairo_draw:
             for key in self.motif_dict.keys():
                 context.set_source_rgb(1, 1, 1) 
                 context.set_font_size(12)
-                context.move_to(750, y)
+                context.move_to(self.longest_seq-85, y)
                 context.show_text(key.upper())
                 y += 30
             
             #add motif names next to the rectangles to finish the key 
             y = 35
             for i in range(len(self.motif_dict)):
-                context.rectangle(730, y, 10 , 10)
+                context.rectangle(self.longest_seq-100, y, 10 , 10)
                 context.set_source_rgb(self.color_list[i][0],self.color_list[i][1],self.color_list[i][2])
                 context.fill()
                 y += 30
@@ -216,4 +224,5 @@ color_list.append((0.9,0.5,0)) # orange
 
 #run the pycairo methods to draw the images
 figure1 = Pycairo_draw(motif_dict, seq_dict, color_list)
+figure1.find_longest()
 figure1.create_figure()
